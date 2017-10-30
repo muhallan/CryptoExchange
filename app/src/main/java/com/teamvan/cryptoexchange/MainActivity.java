@@ -15,7 +15,7 @@ public class MainActivity extends AppCompatActivity {
 
     TabLayout tabLayout;
     ViewPager viewPager;
-    public static int int_items = 2;
+    private static int int_items = 2;
     MyAdapter myAdapter;
 
     @Override
@@ -63,9 +63,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public Fragment getItem(int position) {
             Fragment fragment = null;
-            if (position==0)
+            if (position == 0)
                 fragment = new BitcoinFragment();
-            if (position==1)
+            if (position == 1)
                 fragment = new EthereumFragment();
 
             return fragment;

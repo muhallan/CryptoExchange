@@ -3,4 +3,8 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="currency_image">Currency image</string>
+    <string name="currency_name">Currency name</string>
+    <string name="currency_value">currency value</string>
+    <string name="title_currencies">Title currencies</string>
 </resources>
