@@ -7,7 +7,7 @@ import android.graphics.Bitmap;
  */
 
 public class Currency {
-    int id;
+    private int id;
     private String name, code, unicode_hex;
     private Bitmap image;
 

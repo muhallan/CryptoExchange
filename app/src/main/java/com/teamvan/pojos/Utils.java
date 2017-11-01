@@ -24,7 +24,8 @@ public class Utils {
 
     public ArrayList<Currency> getCurrencies() {
         final ArrayList<Currency> imageItems = new ArrayList<>();
-        // retrieve String drawable array
+
+        // retrieve Strings and drawable arrays
         TypedArray imgs = context.getResources().obtainTypedArray(R.array.currency_images);
         String[] names = context.getResources().getStringArray(R.array.currency_names);
         String[] codes = context.getResources().getStringArray(R.array.currency_codes);
@@ -73,5 +74,46 @@ public class Utils {
         // Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
         return BitmapFactory.decodeResource(res, resId, options);
+    }
+
+    public ArrayList<Coin> getCoins() {
+        ArrayList<Coin> both_coins = new ArrayList<>();
+
+        Coin bitcoin = new Coin();
+        bitcoin.setCoinName("Bitcoin");
+        bitcoin.setFullName("Bitcoin (BTC)");
+        bitcoin.setName("BTC");
+        bitcoin.setImageUrl("/media/19633/btc.png");
+        bitcoin.setUrl("/coins/btc/overview");
+
+        Coin ethereum = new Coin();
+        ethereum.setCoinName("Ethereum Classic");
+        ethereum.setUrl("/coins/etc/overview");
+        ethereum.setImageUrl("/media/20275/etc2.png");
+        ethereum.setFullName("Ethereum Classic (ETC)");
+        ethereum.setName("ETC");
+
+        both_coins.add(bitcoin);
+        both_coins.add(ethereum);
+
+        return both_coins;
+    }
+
+    public String get_exchange_url (String from, ArrayList<String> to) {
+
+        StringBuilder to_currencies = new StringBuilder();
+        for (int i = 0; i < to.size(); i++) {
+            to_currencies.append(to.get(i));
+            to_currencies.append(",");
+        }
+
+        String currency_list_with_commas = to_currencies.toString();
+        if (currency_list_with_commas.length() > 1) {
+            currency_list_with_commas = currency_list_with_commas.
+                    substring(0, currency_list_with_commas.length() - 1);
+        }
+
+        // build the url from the parameters
+        return Globals.baseUrl_for_exchange + "fsym=" + from + "&tsyms=" + currency_list_with_commas;
     }
 }

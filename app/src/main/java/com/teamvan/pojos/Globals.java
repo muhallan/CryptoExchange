@@ -6,6 +6,7 @@ package com.teamvan.pojos;
 
 public class Globals {
     public static final String baseUrl = "https://www.cryptocompare.com";
+    public static final String baseUrl_for_exchange = "https://min-api.cryptocompare.com/data/price?";
     public static boolean timeout = false;
     public static final String bitcoin_name = "BTC";
     public static final String ethereum_name = "ETH";

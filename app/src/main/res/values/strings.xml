@@ -7,4 +7,6 @@
     <string name="currency_name">Currency name</string>
     <string name="currency_value">currency value</string>
     <string name="title_currencies">Title currencies</string>
+
+    <string name="type_to_search">Type to Search</string>
 </resources>

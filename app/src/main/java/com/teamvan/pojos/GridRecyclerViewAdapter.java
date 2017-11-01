@@ -1,6 +1,5 @@
 package com.teamvan.pojos;
 
-import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +8,7 @@ import android.widget.TextView;
 
 import com.teamvan.cryptoexchange.R;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,17 +18,18 @@ import java.util.List;
 public class GridRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private List<Currency> currencies;
-    private Context context;
+    List<Exchange> currency_exchanges;
 
     private final int TYPE_GRID_HEADER = 0;
 
-    // DBHelper database;
+    public GridRecyclerViewAdapter(List<Exchange> currency_exchanges) {
+        currencies = new ArrayList<>();
+        this.currency_exchanges = currency_exchanges;
 
-    public GridRecyclerViewAdapter(Context context, List<Currency> itemList) {
-        this.currencies = itemList;
-        this.context = context;
-        // database = DBHelper.getInstance(context);
-
+        for (int i = 0; i < currency_exchanges.size(); i++) {
+            Currency currency = currency_exchanges.get(i).getCurrency();
+            currencies.add(currency);
+        }
     }
 
     @Override
@@ -46,14 +47,11 @@ public class GridRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, final int position) {
-        //holder.productImage.setImageUrl(Globals.url_to_product_images + products.get(position).getImageOne(), NetworkController.getInstance(context).getImageLoader());
-        //Glide.with(context).load(Globals.url_to_product_images + products.get(position).getImageOne()).fitCenter().into(holder.productImage);
-
         if (position != TYPE_GRID_HEADER) {
             // cast the viewHolder in order to use the GridRecyclerViewHolders
             GridRecyclerViewHolders holder = (GridRecyclerViewHolders) viewHolder;
 
-            holder.currencyValueTv.setText("$3000");
+            holder.currencyValueTv.setText(currencies.get(position - 1).getUnicode_hex() + " " + currency_exchanges.get(position - 1).getExchangeRate());
 
             // set the name and code of the currency
             holder.currencyNameTv.setText(currencies.get(position - 1).getName() + " (" + currencies.get(position - 1).getCode() + ")");

@@ -7,9 +7,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 
-/**
- * Created by Muhwezi Allan on 11/28/2016.
- */
 public class WrappableGridLayoutManager extends GridLayoutManager {
 
     public WrappableGridLayoutManager(Context context, int spanCount) {
