@@ -9,4 +9,7 @@
     <string name="title_currencies">Title currencies</string>
 
     <string name="type_to_search">Type to Search</string>
+    <string name="no_currency">No currency has been added yet.</string>
+    <string name="coin_image">Coin image</string>
+    <string name="add_currency">Add a new currency by clicking on the button in the right bottom corner.</string>
 </resources>

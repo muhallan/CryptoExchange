@@ -18,7 +18,7 @@ import java.util.List;
 public class GridRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private List<Currency> currencies;
-    List<Exchange> currency_exchanges;
+    private List<Exchange> currency_exchanges;
 
     private final int TYPE_GRID_HEADER = 0;
 
@@ -26,7 +26,7 @@ public class GridRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         currencies = new ArrayList<>();
         this.currency_exchanges = currency_exchanges;
 
-        for (int i = 0; i < currency_exchanges.size(); i++) {
+        for (int i = 0; i < this.currency_exchanges.size(); i++) {
             Currency currency = currency_exchanges.get(i).getCurrency();
             currencies.add(currency);
         }
@@ -62,9 +62,21 @@ public class GridRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
     }
 
+    // used to update the exchanges when a new currency is added
+    public void notifyNewExchanges (ArrayList<Exchange> new_exchanges) {
+
+        for (Exchange exchange: new_exchanges) {
+            currency_exchanges.add(exchange);
+            Currency currency = exchange.getCurrency();
+            currencies.add(currency);
+        }
+
+        notifyItemInserted(this.currency_exchanges.size());
+    }
+
     @Override
     public int getItemCount() {
-        return this.currencies.size() + 1;
+        return this.currency_exchanges.size() + 1;
     }
 
     private class HeaderViewHolder extends RecyclerView.ViewHolder {

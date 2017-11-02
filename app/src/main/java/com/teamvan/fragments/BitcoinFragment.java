@@ -16,7 +16,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -33,6 +35,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.teamvan.cryptoexchange.R;
 import com.teamvan.databases.DBHelper;
+import com.teamvan.pojos.Coin;
 import com.teamvan.pojos.Currency;
 import com.teamvan.pojos.Exchange;
 import com.teamvan.pojos.Globals;
@@ -62,10 +65,13 @@ public class BitcoinFragment extends Fragment implements SwipeRefreshLayout.OnRe
     RequestQueue queue;
     GridRecyclerViewAdapter grid_adapter;
     private SwipeRefreshLayout swipeContainer;
+    private FrameLayout containerFl;
     DBHelper database;
     CoordinatorLayout coordinatorLayout;
     String TAG = this.getClass().getSimpleName();
     ItemOffsetDecoration itemDecoration;
+    ViewStub emptyStub;
+    ArrayList<Exchange> coin_exchanges;
 
     // currencies to be added to this fragment and coin
     ArrayList<Currency> currencies_to_add = new ArrayList<>();
@@ -90,6 +96,8 @@ public class BitcoinFragment extends Fragment implements SwipeRefreshLayout.OnRe
 
         coordinatorLayout = v.findViewById(R.id.coordinator_layout_cl);
 
+        containerFl = v.findViewById(R.id.containerFl);
+
         // Configure the refreshing colors
         swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
                 android.R.color.holo_green_light,
@@ -104,7 +112,15 @@ public class BitcoinFragment extends Fragment implements SwipeRefreshLayout.OnRe
         rView.setItemViewCacheSize(20);
         rView.setDrawingCacheEnabled(true);
 
-        ArrayList<Exchange> coin_exchanges = database.getCoinCurrencies(Globals.bitcoin_name);
+        coin_exchanges = database.getCoinCurrencies(Globals.bitcoin_name);
+
+        emptyStub = v.findViewById(R.id.stub_empty_currencies);
+
+        if (coin_exchanges.isEmpty()) {
+            emptyStub.inflate();
+            swipeContainer.setVisibility(View.GONE);
+        }
+
         setupGridRecyclerView(rView, coin_exchanges);
 
         swipeContainer.post(new Runnable() {
@@ -123,7 +139,7 @@ public class BitcoinFragment extends Fragment implements SwipeRefreshLayout.OnRe
             public void onClick(final View v) {
 
                 // get the layoutinflater to inflate the custom layout for the alertdialog
-                LayoutInflater inflater = getActivity().getLayoutInflater();
+                final LayoutInflater inflater = getActivity().getLayoutInflater();
                 View alertLayout = inflater.inflate(R.layout.add_currency_layout, null);
 
                 MultiSpinnerSearch currenciesSpinner = alertLayout.findViewById(R.id.currencyMSS);
@@ -160,7 +176,6 @@ public class BitcoinFragment extends Fragment implements SwipeRefreshLayout.OnRe
                 final AlertDialog dialog = builder.create();
                 dialog.show();
 
-                //Overriding the handler immediately after show is probably a better approach than OnShowListener as described below
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
                     Boolean wantToCloseDialog = false;
 
@@ -174,9 +189,8 @@ public class BitcoinFragment extends Fragment implements SwipeRefreshLayout.OnRe
                             Toast.makeText(getActivity(), "No currency selected", Toast.LENGTH_SHORT).show();
                         } else {
                             wantToCloseDialog = true;
-                            final ProgressBar progressBar = new ProgressBar(getActivity(), null, android.R.attr.progressBarStyleSmall);
-                            progressBar.setIndeterminate(true);
-                            progressBar.setVisibility(View.VISIBLE);
+
+                            final ProgressBar loadingPb = Utils.showProgressBar(getActivity());
 
                             ArrayList<String> to_add_currencies = new ArrayList<>();
                             for (int i = 0; i < currencies_to_add.size(); i++) {
@@ -191,40 +205,45 @@ public class BitcoinFragment extends Fragment implements SwipeRefreshLayout.OnRe
                                         public void onResponse(String response) {
 
                                             Log.e("response verify", response);
-                                            progressBar.setVisibility(View.GONE);
+                                            loadingPb.setVisibility(View.GONE);
 
                                             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault());
                                             Date date = new Date();
                                             String retrieved_at = sdf.format(date);
 
+                                            ArrayList<Coin> our_coins = new Utils(getActivity()).getCoins();
+                                            Coin theCoin = new Coin();
+                                            for (int i = 0; i < our_coins.size(); i++) {
+                                                if (our_coins.get(i).getName().equals(Globals.bitcoin_name)) {
+                                                    theCoin = our_coins.get(i);
+                                                    break;
+                                                }
+                                            }
+
+                                            ArrayList<Exchange> added_exchanges = new ArrayList<>();
                                             try {
                                                 JSONObject jsonResponse = new JSONObject(response);
                                                 for (int i = 0; i < currencies_to_add.size(); i++) {
                                                     String exchange_rate = jsonResponse.getString(currencies_to_add.get(i).getCode());
                                                     database.addCurrency(currencies_to_add.get(i).getId(), exchange_rate, retrieved_at, Globals.bitcoin_name);
+
+                                                    Exchange exchange = new Exchange(currencies_to_add.get(i), theCoin, exchange_rate, retrieved_at);
+                                                    added_exchanges.add(exchange);
                                                 }
+
+                                                // clear the list to prepare for next addition
+                                                currencies_to_add.clear();
+
                                             } catch (JSONException e) {
                                                 e.printStackTrace();
                                             }
-/*
-                                            if (response.equals("late")) {
-                                                // 1. Instantiate an AlertDialog.Builder with its constructor
-                                                AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
-                                                builder.setTitle("Voucher Payment");
-                                                // 2. Chain together various setter methods to set the dialog characteristics
-                                                builder.setMessage("The voucher code you have entered is expired. Please enter another one.\nExpiration duration is 5 minutes.");
-                                                // Add the buttons
-                                                builder.setPositiveButton("Okay", new DialogInterface.OnClickListener() {
-                                                    public void onClick(DialogInterface dialog, int id) {
-                                                        dialog.dismiss();
-                                                    }
-                                                });
-                                                builder.setCancelable(false);
 
-                                                // 3. Get the AlertDialog from create()
-                                                AlertDialog dialog = builder.create();
-                                                dialog.show();
-                                            }*/
+                                            grid_adapter.notifyNewExchanges(added_exchanges);
+
+                                            if (swipeContainer.getVisibility() == View.GONE) {
+                                                emptyStub.setVisibility(View.GONE);
+                                                swipeContainer.setVisibility(View.VISIBLE);
+                                            }
                                         }
                                     },
                                     new Response.ErrorListener() {
@@ -232,24 +251,37 @@ public class BitcoinFragment extends Fragment implements SwipeRefreshLayout.OnRe
                                         public void onErrorResponse(VolleyError volleyError) {
                                             String message = null;
                                             if (volleyError instanceof NoConnectionError) {
-                                                Toast.makeText(v.getContext(), "No Internet Connection", Toast.LENGTH_SHORT).show();
-                                                message = "Cannot connect to Internet...Please check your connection!";
+                                                message = "Cannot connect to the Internet. Please check your connection!";
                                             } else if (volleyError instanceof NetworkError) {
-                                                Toast.makeText(v.getContext(), "Please check your Internet connection", Toast.LENGTH_SHORT).show();
-                                                message = "Cannot connect to the server...Please check your connection!";
+                                                message = "Cannot connect to the server. Please check your connection!";
                                             } else if (volleyError instanceof ServerError) {
-                                                message = "The server could not be found. Please try again after some time!!";
+                                                message = "The server could not be found. Please try again after some time!";
                                             } else if (volleyError instanceof AuthFailureError) {
-                                                message = "Cannot connect to Internet...Please check your connection!";
+                                                message = "Cannot connect to Internet. Please check your connection!";
                                             } else if (volleyError instanceof ParseError) {
                                                 message = "Parsing error! Please try again after some time!!";
                                             } else if (volleyError instanceof TimeoutError) {
-                                                Toast.makeText(v.getContext(), "Please check your Internet connection", Toast.LENGTH_SHORT).show();
-                                                message = "Connection TimeOut! Please check your internet connection.";
+                                                message = "Connection Timeout! Please check your internet connection.";
                                             }
-                                            Log.e("volley error fav", message);
+                                            Log.e("volley error", message);
 
-                                            progressBar.setVisibility(View.GONE);
+                                            // 1. Instantiate an AlertDialog.Builder with its constructor
+                                            AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
+                                            // 2. Chain together various setter methods to set the dialog characteristics
+                                            builder.setMessage(message);
+                                            // Add the buttons
+                                            builder.setPositiveButton("Okay", new DialogInterface.OnClickListener() {
+                                                public void onClick(DialogInterface dialog, int id) {
+                                                    dialog.dismiss();
+                                                }
+                                            });
+                                            builder.setCancelable(false);
+
+                                            // 3. Get the AlertDialog from create()
+                                            AlertDialog dialog = builder.create();
+                                            dialog.show();
+
+                                            loadingPb.setVisibility(View.GONE);
                                         }
                                     });
                             // Set the tag on the request.
@@ -288,11 +320,25 @@ public class BitcoinFragment extends Fragment implements SwipeRefreshLayout.OnRe
 
         for (int i = 0; i < all_currencies.size(); i++) {
 
-            KeyPairBoolData data = new KeyPairBoolData();
-            data.setId(i + 1);
-            data.setName((all_currencies.get(i).getName() + " - " + all_currencies.get(i).getCode()));
-            data.setSelected(false);
-            listArray.add(data);
+            boolean should_add = true;
+
+            // Get the list of currencies that are already added to this coin fragment
+            for (int j = 0; j < coin_exchanges.size(); j++) {
+                Currency saved_currency = coin_exchanges.get(j).getCurrency();
+                // if a currency is already added, don't add it in the list
+                if (saved_currency.getId() == all_currencies.get(i).getId()){
+                    should_add = false;
+                }
+            }
+
+            if (should_add) {
+                KeyPairBoolData data = new KeyPairBoolData();
+                data.setId(all_currencies.get(i).getId());
+                data.setName((all_currencies.get(i).getName() + " - " + all_currencies.get(i).getCode()));
+                data.setSelected(false);
+                listArray.add(data);
+            }
+
         }
 
 
@@ -311,7 +357,13 @@ public class BitcoinFragment extends Fragment implements SwipeRefreshLayout.OnRe
                     if (items.get(i).isSelected()) {
                         Log.e(TAG, i + " : " + items.get(i).getName() + " : " + items.get(i).isSelected());
                         Log.e(TAG, all_currencies.get(i).getName());
-                        currencies_to_add.add(all_currencies.get(i));
+
+                        // look for the currency that has been selected and add it
+                        for (int k = 0; k < all_currencies.size(); k++) {
+                            if (items.get(i).getId() == all_currencies.get(k).getId()) {
+                                currencies_to_add.add(all_currencies.get(k));
+                            }
+                        }
                     }
                 }
 
@@ -350,7 +402,7 @@ public class BitcoinFragment extends Fragment implements SwipeRefreshLayout.OnRe
             queue.cancelAll(TAG);
         }
 
-        rView.removeItemDecoration(itemDecoration);
+        //rView.removeItemDecoration(itemDecoration);
     }
 
     @Override

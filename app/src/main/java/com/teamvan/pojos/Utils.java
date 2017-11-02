@@ -1,10 +1,16 @@
 package com.teamvan.pojos;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.PixelFormat;
+import android.support.annotation.NonNull;
+import android.view.Gravity;
+import android.view.WindowManager;
+import android.widget.ProgressBar;
 
 import com.teamvan.cryptoexchange.R;
 
@@ -99,7 +105,7 @@ public class Utils {
         return both_coins;
     }
 
-    public String get_exchange_url (String from, ArrayList<String> to) {
+    public String get_exchange_url(String from, ArrayList<String> to) {
 
         StringBuilder to_currencies = new StringBuilder();
         for (int i = 0; i < to.size(); i++) {
@@ -115,5 +121,28 @@ public class Utils {
 
         // build the url from the parameters
         return Globals.baseUrl_for_exchange + "fsym=" + from + "&tsyms=" + currency_list_with_commas;
+    }
+
+    public static ProgressBar showProgressBar(@NonNull final Activity activity) {
+
+        final WindowManager wm = (WindowManager) activity.getApplicationContext().getSystemService(Activity.WINDOW_SERVICE);
+
+        final ProgressBar progressBar = new ProgressBar(activity, null, android.R.attr.progressBarStyleLarge);
+        progressBar.setIndeterminate(true);
+
+        WindowManager.LayoutParams windowLayoutParams = new WindowManager.LayoutParams();
+        windowLayoutParams.gravity = Gravity.CENTER;
+        windowLayoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL;
+        windowLayoutParams.token = activity.getWindow().getDecorView().getWindowToken();
+        windowLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+
+        windowLayoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+        windowLayoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
+
+        windowLayoutParams.format = PixelFormat.TRANSLUCENT;
+
+        wm.addView(progressBar, windowLayoutParams);
+
+        return progressBar;
     }
 }
