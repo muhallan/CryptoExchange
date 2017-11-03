@@ -89,15 +89,17 @@ public class Utils {
         bitcoin.setCoinName("Bitcoin");
         bitcoin.setFullName("Bitcoin (BTC)");
         bitcoin.setName("BTC");
-        bitcoin.setImageUrl("/media/19633/btc.png");
+        Bitmap bitmap_bit = decodeSampledBitmapFromResource(context.getResources(), R.drawable.btc, 300, 300);
+        bitcoin.setImageBitmap(bitmap_bit);
         bitcoin.setUrl("/coins/btc/overview");
 
         Coin ethereum = new Coin();
         ethereum.setCoinName("Ethereum Classic");
         ethereum.setUrl("/coins/etc/overview");
-        ethereum.setImageUrl("/media/20275/etc2.png");
+        Bitmap bitmap_eth = decodeSampledBitmapFromResource(context.getResources(), R.drawable.eth_logo, 300, 300);
+        ethereum.setImageBitmap(bitmap_eth);
         ethereum.setFullName("Ethereum Classic (ETC)");
-        ethereum.setName("ETC");
+        ethereum.setName("ETH");
 
         both_coins.add(bitcoin);
         both_coins.add(ethereum);

@@ -3,7 +3,7 @@
     android:id="@+id/coordinator_layout_cl"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.teamvan.fragments.BitcoinFragment">
+    tools:context="com.teamvan.fragments.CoinFragment">
 
     <FrameLayout
         android:id="@+id/containerFl"

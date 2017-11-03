@@ -1,29 +1,32 @@
 package com.teamvan.pojos;
 
+import android.graphics.Bitmap;
+
 /**
  * Created by allan on 30/10/2017.
  */
 
 public class Coin {
-    private String imageUrl, name, coinName, fullName, url;
+    private Bitmap imageBitmap;
+    private String name, coinName, fullName, url;
 
     public Coin() {
     }
 
-    public Coin(String imageUrl, String name, String coinName, String fullName, String url) {
-        this.imageUrl = imageUrl;
+    public Coin(Bitmap imageBitmap, String name, String coinName, String fullName, String url) {
+        this.imageBitmap = imageBitmap;
         this.name = name;
         this.coinName = coinName;
         this.fullName = fullName;
         this.url = url;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
+    public Bitmap getImageBitmap() {
+        return imageBitmap;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setImageBitmap(Bitmap imageBitmap) {
+        this.imageBitmap = imageBitmap;
     }
 
     public String getName() {

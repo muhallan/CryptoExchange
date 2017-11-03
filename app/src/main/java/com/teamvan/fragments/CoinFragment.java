@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -38,7 +39,6 @@ import com.teamvan.databases.DBHelper;
 import com.teamvan.pojos.Coin;
 import com.teamvan.pojos.Currency;
 import com.teamvan.pojos.Exchange;
-import com.teamvan.pojos.Globals;
 import com.teamvan.pojos.GridRecyclerViewAdapter;
 import com.teamvan.pojos.ItemOffsetDecoration;
 import com.teamvan.pojos.KeyPairBoolData;
@@ -59,7 +59,7 @@ import java.util.Locale;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class BitcoinFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener  {
+public class CoinFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener  {
 
     RecyclerView rView;
     RequestQueue queue;
@@ -73,10 +73,13 @@ public class BitcoinFragment extends Fragment implements SwipeRefreshLayout.OnRe
     ViewStub emptyStub;
     ArrayList<Exchange> coin_exchanges;
 
+    // the current coin the fragment is working with
+    Coin current_coin;
+
     // currencies to be added to this fragment and coin
     ArrayList<Currency> currencies_to_add = new ArrayList<>();
 
-    public BitcoinFragment() {
+    public CoinFragment() {
         // Required empty public constructor
     }
 
@@ -85,11 +88,23 @@ public class BitcoinFragment extends Fragment implements SwipeRefreshLayout.OnRe
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_bitcoin, container, false);
+        View v = inflater.inflate(R.layout.fragment_coin, container, false);
+
+        // retrieve the type of coin that we are working with
+        Bundle b = getArguments();
+        String coin_name = b.getString("coin_name");
+
+        ArrayList<Coin> our_coins = new Utils(getActivity()).getCoins();
+        for (int i = 0; i < our_coins.size(); i++) {
+            if (our_coins.get(i).getName().equals(coin_name)) {
+                current_coin = our_coins.get(i);
+                break;
+            }
+        }
 
         database = DBHelper.getInstance(getActivity());
 
-        //Getting Instance of Volley Request Queue
+        // Getting Instance of Volley Request Queue
         queue = NetworkController.getInstance(getActivity()).getRequestQueue();
 
         swipeContainer = v.findViewById(R.id.swipeContainer);
@@ -112,12 +127,17 @@ public class BitcoinFragment extends Fragment implements SwipeRefreshLayout.OnRe
         rView.setItemViewCacheSize(20);
         rView.setDrawingCacheEnabled(true);
 
-        coin_exchanges = database.getCoinCurrencies(Globals.bitcoin_name);
+        coin_exchanges = database.getCoinCurrencies(current_coin.getName());
 
         emptyStub = v.findViewById(R.id.stub_empty_currencies);
 
+
+
         if (coin_exchanges.isEmpty()) {
-            emptyStub.inflate();
+            View noCurrenciesView = emptyStub.inflate();
+            ImageView coinImage = noCurrenciesView.findViewById(R.id.coin_imageIv);
+            coinImage.setImageBitmap(current_coin.getImageBitmap());
+
             swipeContainer.setVisibility(View.GONE);
         }
 
@@ -197,7 +217,7 @@ public class BitcoinFragment extends Fragment implements SwipeRefreshLayout.OnRe
                                 to_add_currencies.add(currencies_to_add.get(i).getCode());
                             }
 
-                            final String url_to_api = new Utils(getActivity()).get_exchange_url(Globals.bitcoin_name, to_add_currencies);
+                            final String url_to_api = new Utils(getActivity()).get_exchange_url(current_coin.getName(), to_add_currencies);
 
                             StringRequest stringRequest_verify = new StringRequest(Request.Method.GET, url_to_api,
                                     new Response.Listener<String>() {
@@ -211,23 +231,14 @@ public class BitcoinFragment extends Fragment implements SwipeRefreshLayout.OnRe
                                             Date date = new Date();
                                             String retrieved_at = sdf.format(date);
 
-                                            ArrayList<Coin> our_coins = new Utils(getActivity()).getCoins();
-                                            Coin theCoin = new Coin();
-                                            for (int i = 0; i < our_coins.size(); i++) {
-                                                if (our_coins.get(i).getName().equals(Globals.bitcoin_name)) {
-                                                    theCoin = our_coins.get(i);
-                                                    break;
-                                                }
-                                            }
-
                                             ArrayList<Exchange> added_exchanges = new ArrayList<>();
                                             try {
                                                 JSONObject jsonResponse = new JSONObject(response);
                                                 for (int i = 0; i < currencies_to_add.size(); i++) {
                                                     String exchange_rate = jsonResponse.getString(currencies_to_add.get(i).getCode());
-                                                    database.addCurrency(currencies_to_add.get(i).getId(), exchange_rate, retrieved_at, Globals.bitcoin_name);
+                                                    database.addCurrency(currencies_to_add.get(i).getId(), exchange_rate, retrieved_at, current_coin.getName());
 
-                                                    Exchange exchange = new Exchange(currencies_to_add.get(i), theCoin, exchange_rate, retrieved_at);
+                                                    Exchange exchange = new Exchange(currencies_to_add.get(i), current_coin, exchange_rate, retrieved_at);
                                                     added_exchanges.add(exchange);
                                                 }
 

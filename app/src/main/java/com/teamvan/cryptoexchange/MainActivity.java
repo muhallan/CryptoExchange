@@ -8,8 +8,8 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 
-import com.teamvan.fragments.BitcoinFragment;
-import com.teamvan.fragments.EthereumFragment;
+import com.teamvan.fragments.CoinFragment;
+import com.teamvan.pojos.Globals;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -63,10 +63,19 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public Fragment getItem(int position) {
             Fragment fragment = null;
-            if (position == 0)
-                fragment = new BitcoinFragment();
-            if (position == 1)
-                fragment = new EthereumFragment();
+            Bundle args = new Bundle();
+
+            // use the same fragment but with different arguments for the two coins
+            if (position == 0) {
+                args.putString("coin_name", Globals.bitcoin_name);
+                fragment = new CoinFragment();
+                fragment.setArguments(args);
+            }
+            if (position == 1) {
+                args.putString("coin_name", Globals.ethereum_name);
+                fragment = new CoinFragment();
+                fragment.setArguments(args);
+            }
 
             return fragment;
         }
