@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="currency_images">
+        <item>@drawable/afghanistan</item>
+        <item>@drawable/argentina</item>
+        <item>@drawable/australia</item>
+        <item>@drawable/brazil</item>
+        <item>@drawable/canada</item>
+        <item>@drawable/china</item>
+        <item>@drawable/denmark</item>
+        <item>@drawable/egypt</item>
+        <item>@drawable/euro</item>
+        <item>@drawable/hongkong</item>
+        <item>@drawable/india</item>
+        <item>@drawable/jamaica</item>
+        <item>@drawable/japan</item>
+        <item>@drawable/nigeria</item>
+        <item>@drawable/qatar</item>
+        <item>@drawable/russia</item>
+        <item>@drawable/southafrica</item>
+        <item>@drawable/sweden</item>
+        <item>@drawable/uk</item>
+        <item>@drawable/us</item>
+
+    </string-array>
+
+    <string-array name="currency_names">
+        <item>Afghanistan Afghani</item>
+        <item>Argentina Peso</item>
+        <item>Australia Dollar</item>
+        <item>Brazil Real</item>
+        <item>Canada Dollar</item>
+        <item>China Yuan Renminbi</item>
+        <item>Denmark Krone</item>
+        <item>Egypt Pound</item>
+        <item>Euro</item>
+        <item>Hong Kong Dollar</item>
+        <item>India Rupee</item>
+        <item>Jamaica Dollar</item>
+        <item>Japan Yen</item>
+        <item>Nigeria Naira</item>
+        <item>Qatar Riyal</item>
+        <item>Russia Ruble</item>
+        <item>South Africa Rand</item>
+        <item>Sweden Krona</item>
+        <item>United Kingdom Pound</item>
+        <item>United States Dollar</item>
+
+    </string-array>
+
+    <string-array name="currency_codes">
+        <item>AFN</item>
+        <item>ARS</item>
+        <item>AUD</item>
+        <item>BRL</item>
+        <item>CAD</item>
+        <item>CNY</item>
+        <item>DKK</item>
+        <item>EGP</item>
+        <item>EUR</item>
+        <item>HKD</item>
+        <item>INR</item>
+        <item>JMD</item>
+        <item>JPY</item>
+        <item>NGN</item>
+        <item>QAR</item>
+        <item>RUB</item>
+        <item>ZAR</item>
+        <item>SEK</item>
+        <item>GBP</item>
+        <item>USD</item>
+    </string-array>
+
+    <string-array name="currency_symbols_unicode_hex">
+        <item>\u060b</item>
+        <item>\u0024</item>
+        <item>\u0024</item>
+        <item>\u0052\u0024</item>
+        <item>\u0024</item>
+        <item>\u00a5</item>
+        <item>\u006b\u0072</item>
+        <item>\u00a3</item>
+        <item>\u20ac</item>
+        <item>\u0024</item>
+        <item>\u20b9</item>
+        <item>\u004a\u0024</item>
+        <item>\u00a5</item>
+        <item>\u20a6</item>
+        <item>\ufdfc</item>
+        <item>\u20bd</item>
+        <item>\u0052</item>
+        <item>\u006b\u0072</item>
+        <item>\u00a3</item>
+        <item>\u0024</item>
+
+
+    </string-array>
+</resources>

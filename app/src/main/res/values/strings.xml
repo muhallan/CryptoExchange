@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">CryptoExchange</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="currency_image">Currency image</string>
+    <string name="currency_name">Currency name</string>
+    <string name="currency_value">currency value</string>
+    <string name="title_currencies">Title currencies</string>
+
+    <string name="type_to_search">Type to Search</string>
+    <string name="no_currency">No currency has been added yet.</string>
+    <string name="coin_image">Coin image</string>
+    <string name="add_currency">Add a new currency by clicking on the button in the right bottom corner.</string>
+    <string name="from">From</string>
+    <string name="to">To</string>
 </resources>
