@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="com.example.MainActivity">
+
+    <item
+        android:id="@+id/menu_refresh"
+        app:showAsAction="always"
+        android:orderInCategory="100"
+        android:icon="@drawable/ic_fa_refresh"
+        android:title="Refresh"/>
+
+    <item
+        android:id="@+id/myActionProgress"
+        android:title="Loading..."
+        android:visible="false"
+        android:orderInCategory="100"
+        app:showAsAction="always"
+        app:actionLayout="@layout/switch_exchange" />
+</menu>

@@ -12,4 +12,6 @@
     <string name="no_currency">No currency has been added yet.</string>
     <string name="coin_image">Coin image</string>
     <string name="add_currency">Add a new currency by clicking on the button in the right bottom corner.</string>
+    <string name="from">From</string>
+    <string name="to">To</string>
 </resources>

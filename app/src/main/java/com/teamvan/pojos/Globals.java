@@ -10,4 +10,7 @@ public class Globals {
     public static boolean timeout = false;
     public static final String bitcoin_name = "BTC";
     public static final String ethereum_name = "ETH";
+
+    // for use to get the clicked currency in the fragments from the ExchangeActivity
+    public static Exchange clickedExchange;
 }

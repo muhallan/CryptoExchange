@@ -136,6 +136,17 @@ public class DBHelper extends SQLiteOpenHelper {
         return currencies_for_coin;
     }
 
+    public void updateExchanges (String new_rate, String updated_time, int currency_id, String coin_name){
+        String qry = "UPDATE " + ITEM.TABLE_CURRENCIES + " SET " + ITEM.EXCHANGE_RATE + " = '" +
+                new_rate + "', " + ITEM.TIMESTAMP_UPDATED + " = '" + updated_time + "' WHERE " +
+                ITEM.CURRENCY_ID + " = " + currency_id + " AND " + ITEM.COIN_NAME + " = '" + coin_name + "'";
+        try {
+            getWritableDatabase().execSQL(qry);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void deleteCurrency (int currency_id, String coin_name) {
 
         // query for a currency and delete it

@@ -1,11 +1,14 @@
 package com.teamvan.pojos;
 
+import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.teamvan.cryptoexchange.ExchangeActivity;
 import com.teamvan.cryptoexchange.R;
 
 import java.util.ArrayList;
@@ -22,9 +25,12 @@ public class GridRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
     private final int TYPE_GRID_HEADER = 0;
 
-    public GridRecyclerViewAdapter(List<Exchange> currency_exchanges) {
+    private Context context;
+
+    public GridRecyclerViewAdapter(Context context, List<Exchange> currency_exchanges) {
         currencies = new ArrayList<>();
         this.currency_exchanges = currency_exchanges;
+        this.context = context;
 
         for (int i = 0; i < this.currency_exchanges.size(); i++) {
             Currency currency = currency_exchanges.get(i).getCurrency();
@@ -58,6 +64,15 @@ public class GridRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
             // set the image of the currency
             holder.currencyImageIv.setImageBitmap(currencies.get(position - 1).getImage());
+
+            // handle clicks on each card and take to the exchange rate screen
+            holder.wrapper.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Globals.clickedExchange = currency_exchanges.get(position - 1);
+                    context.startActivity(new Intent(context, ExchangeActivity.class));
+                }
+            });
         }
 
     }

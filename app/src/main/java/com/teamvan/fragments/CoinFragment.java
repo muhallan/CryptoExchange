@@ -293,6 +293,9 @@ public class CoinFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                                             dialog.show();
 
                                             loadingPb.setVisibility(View.GONE);
+
+                                            // clear the list to prepare for next addition
+                                            currencies_to_add.clear();
                                         }
                                     });
                             // Set the tag on the request.
@@ -395,7 +398,7 @@ public class CoinFragment extends Fragment implements SwipeRefreshLayout.OnRefre
 
         recyclerview.setLayoutManager(gridLayoutManager);
 
-        grid_adapter = new GridRecyclerViewAdapter(exchanges);
+        grid_adapter = new GridRecyclerViewAdapter(getActivity(), exchanges);
         itemDecoration = new ItemOffsetDecoration(getActivity(), R.dimen.item_offset);
         recyclerview.addItemDecoration(itemDecoration);
         recyclerview.setAdapter(grid_adapter);
