@@ -8,13 +8,15 @@
     android:layout_marginRight="@dimen/activity_horizontal_margin"
     android:layout_marginStart="@dimen/activity_horizontal_margin"
     android:layout_marginTop="32dp"
+    android:fillViewport="true"
     tools:context="com.teamvan.cryptoexchange.ExchangeActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:baselineAligned="false"
         android:gravity="center_horizontal"
+        android:weightSum="1"
         android:orientation="vertical">
 
         <LinearLayout
@@ -178,5 +180,19 @@
                     android:textColor="@color/black" />
             </LinearLayout>
         </LinearLayout>
+
+        <android.support.v4.widget.Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+        </android.support.v4.widget.Space>
+
+        <TextView
+            android:id="@+id/last_updatedTv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/activity_horizontal_margin"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:text="Updated at 05/10/2017 01:22:22"/>
     </LinearLayout>
 </ScrollView>

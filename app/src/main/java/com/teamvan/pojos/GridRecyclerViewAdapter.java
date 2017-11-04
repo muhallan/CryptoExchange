@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import com.teamvan.cryptoexchange.ExchangeActivity;
 import com.teamvan.cryptoexchange.R;
+import com.teamvan.databases.DBHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,6 +88,20 @@ public class GridRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         }
 
         notifyItemInserted(this.currency_exchanges.size());
+    }
+
+    // force the UI update when the currency data is refreshed
+    public void notifyChangedExchanges (String coin_name) {
+        DBHelper database = DBHelper.getInstance(context);
+        currency_exchanges = database.getCoinCurrencies(coin_name);
+
+        currencies.clear();
+        for (int i = 0; i < currency_exchanges.size(); i++) {
+            Currency currency = currency_exchanges.get(i).getCurrency();
+            currencies.add(currency);
+        }
+
+        notifyDataSetChanged();
     }
 
     @Override

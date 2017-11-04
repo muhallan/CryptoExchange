@@ -18,7 +18,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -65,7 +64,6 @@ public class CoinFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     RequestQueue queue;
     GridRecyclerViewAdapter grid_adapter;
     private SwipeRefreshLayout swipeContainer;
-    private FrameLayout containerFl;
     DBHelper database;
     CoordinatorLayout coordinatorLayout;
     String TAG = this.getClass().getSimpleName();
@@ -111,8 +109,6 @@ public class CoinFragment extends Fragment implements SwipeRefreshLayout.OnRefre
 
         coordinatorLayout = v.findViewById(R.id.coordinator_layout_cl);
 
-        containerFl = v.findViewById(R.id.containerFl);
-
         // Configure the refreshing colors
         swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
                 android.R.color.holo_green_light,
@@ -131,7 +127,7 @@ public class CoinFragment extends Fragment implements SwipeRefreshLayout.OnRefre
 
         emptyStub = v.findViewById(R.id.stub_empty_currencies);
 
-
+        setupGridRecyclerView(rView, coin_exchanges);
 
         if (coin_exchanges.isEmpty()) {
             View noCurrenciesView = emptyStub.inflate();
@@ -139,18 +135,17 @@ public class CoinFragment extends Fragment implements SwipeRefreshLayout.OnRefre
             coinImage.setImageBitmap(current_coin.getImageBitmap());
 
             swipeContainer.setVisibility(View.GONE);
+
+        } else {
+
+            swipeContainer.post(new Runnable() {
+                @Override
+                public void run() {
+                    // make API call to refresh the exchange rates
+                    makeApiRequest();
+                }
+            });
         }
-
-        setupGridRecyclerView(rView, coin_exchanges);
-
-        swipeContainer.post(new Runnable() {
-            @Override
-            public void run() {
-                // swipeContainer.setRefreshing(true);
-
-                // makePostRequest(url, index, false);
-            }
-        });
 
         // floating action button to handle adding of new currency to be exchanged
         FloatingActionButton addCurrency = v.findViewById(R.id.addCurrencyFAB);
@@ -219,7 +214,7 @@ public class CoinFragment extends Fragment implements SwipeRefreshLayout.OnRefre
 
                             final String url_to_api = new Utils(getActivity()).get_exchange_url(current_coin.getName(), to_add_currencies);
 
-                            StringRequest stringRequest_verify = new StringRequest(Request.Method.GET, url_to_api,
+                            StringRequest stringRequest_add = new StringRequest(Request.Method.GET, url_to_api,
                                     new Response.Listener<String>() {
                                         @Override
                                         public void onResponse(String response) {
@@ -299,9 +294,9 @@ public class CoinFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                                         }
                                     });
                             // Set the tag on the request.
-                            stringRequest_verify.setTag(TAG);
+                            stringRequest_add.setTag(TAG);
                             //Adding JsonArrayRequest to Request Queue
-                            queue.add(stringRequest_verify);
+                            queue.add(stringRequest_add);
                         }
                         if (wantToCloseDialog)
                             dialog.dismiss();
@@ -404,9 +399,87 @@ public class CoinFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         recyclerview.setAdapter(grid_adapter);
     }
 
+    private void makeApiRequest() {
+        final ArrayList<String> to_refresh_currencies = new ArrayList<>();
+        for (Exchange anExchange : coin_exchanges) {
+            String currency_code = anExchange.getCurrency().getCode();
+            to_refresh_currencies.add(currency_code);
+        }
+
+        final String url_to_api = new Utils(getActivity()).get_exchange_url(current_coin.getName(), to_refresh_currencies);
+
+        StringRequest stringRequest_refresh = new StringRequest(Request.Method.GET, url_to_api,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+
+                        Log.e("response verify", response);
+
+                        // stopping swipe refresh
+                        swipeContainer.setRefreshing(false);
+
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault());
+                        Date date = new Date();
+                        String updated_at = sdf.format(date);
+
+                        try {
+                            JSONObject jsonResponse = new JSONObject(response);
+                            for (int i = 0; i < to_refresh_currencies.size(); i++) {
+                                String exchange_rate = jsonResponse.getString(to_refresh_currencies.get(i));
+
+                                // update the database with the new exchange rates
+                                database.updateExchanges(exchange_rate, updated_at, coin_exchanges.get(i).getCurrency().getId(), current_coin.getName());
+                            }
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        grid_adapter.notifyChangedExchanges(current_coin.getName());
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError volleyError) {
+                        String message = null;
+                        String error = "";
+                        if (volleyError instanceof NoConnectionError) {
+                            message = "Cannot connect to the Internet. Please check your connection!";
+                            error = "No internet. Exchange rates won't be updated";
+                        } else if (volleyError instanceof NetworkError) {
+                            message = "Cannot connect to the server. Please check your connection!";
+                            error = "No internet. Exchange rates won't be updated";
+                        } else if (volleyError instanceof ServerError) {
+                            message = "The server could not be found. Please try again after some time!";
+                        } else if (volleyError instanceof AuthFailureError) {
+                            message = "Cannot connect to Internet. Please check your connection!";
+                        } else if (volleyError instanceof ParseError) {
+                            message = "Parsing error! Please try again after some time!!";
+                        } else if (volleyError instanceof TimeoutError) {
+                            message = "Connection Timeout! Please check your internet connection.";
+                            error = "Poor internet. Exchange rates won't be updated";
+                        }
+                        Log.e("volley error", message);
+
+                        // stopping swipe refresh
+                        swipeContainer.setRefreshing(false);
+
+                        toggleSnackBar(error, Snackbar.LENGTH_INDEFINITE);
+
+                    }
+                });
+        // Set the tag on the request.
+        stringRequest_refresh.setTag(TAG);
+        //Adding JsonArrayRequest to Request Queue
+        queue.add(stringRequest_refresh);
+    }
+
     @Override
     public void onRefresh() {
 
+        // call the API when the refresh listener is triggered
+        makeApiRequest();
     }
 
     @Override
@@ -422,13 +495,6 @@ public class CoinFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     @Override
     public void onResume() {
         super.onResume();
-        refresh();
-    }
-
-    void refresh() {
-        // rView.removeItemDecoration(itemDecoration);
-        // Toast.makeText(getActivity(), "refreshed", Toast.LENGTH_SHORT).show();
-        // setupGridRecyclerView(rView);
     }
 
     /**

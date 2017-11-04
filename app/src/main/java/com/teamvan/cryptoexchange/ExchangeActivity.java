@@ -6,6 +6,7 @@ import android.support.v7.widget.SwitchCompat;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CompoundButton;
@@ -13,13 +14,35 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkError;
+import com.android.volley.NoConnectionError;
+import com.android.volley.ParseError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.ServerError;
+import com.android.volley.TimeoutError;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.teamvan.databases.DBHelper;
 import com.teamvan.pojos.Coin;
 import com.teamvan.pojos.Currency;
 import com.teamvan.pojos.Exchange;
 import com.teamvan.pojos.Globals;
+import com.teamvan.pojos.NetworkController;
+import com.teamvan.pojos.Utils;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 public class ExchangeActivity extends AppCompatActivity {
 
@@ -32,11 +55,15 @@ public class ExchangeActivity extends AppCompatActivity {
     Coin theCoin = currentExchange.getCoin();
     Currency theCurrency = currentExchange.getCurrency();
 
-    TextView currencyName, coinName, exchangeRateTv;
+    TextView currencyName, coinName, exchangeRateTv, lastUpdatedTv;
 
     EditText fromCoinEt, toCurrencyEt;
 
     ImageView currencyIv, coinIv;
+
+    RequestQueue queue;
+    DBHelper database;
+    String TAG = this.getClass().getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +73,11 @@ public class ExchangeActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle("Conversion");
 
+        database = DBHelper.getInstance(this);
+
+        // Getting Instance of Volley Request Queue
+        queue = NetworkController.getInstance(this).getRequestQueue();
+
         exchangeRateTv = findViewById(R.id.exchange_rate_verboseTv);
         currencyName = findViewById(R.id.currencyNameTv);
         coinName = findViewById(R.id.coinNameTv);
@@ -53,6 +85,7 @@ public class ExchangeActivity extends AppCompatActivity {
         coinIv = findViewById(R.id.coinImageIv);
         fromCoinEt = findViewById(R.id.id_from_coin_amountEt);
         toCurrencyEt = findViewById(R.id.to_currency_valueEt);
+        lastUpdatedTv = findViewById(R.id.last_updatedTv);
 
         setup(flipped);
 
@@ -114,6 +147,7 @@ public class ExchangeActivity extends AppCompatActivity {
             coinIv.setImageBitmap(theCoin.getImageBitmap());
             fromCoinEt.setText("1");
             toCurrencyEt.setText(numFormat(currentExchange.getExchangeRate()));
+            lastUpdatedTv.setText("Last updated at " + currentExchange.getTimestampUpdated());
 
         } else {
 
@@ -124,28 +158,122 @@ public class ExchangeActivity extends AppCompatActivity {
             coinIv.setImageBitmap(theCurrency.getImage());
             fromCoinEt.setText("1");
             toCurrencyEt.setText(numFormat(currentExchange.getExchangeRate()));
+            lastUpdatedTv.setText("Last updated at " + currentExchange.getTimestampUpdated());
 
         }
     }
 
     // format the double decimal places so that they can fit on the textview and edittexts
     private String numFormat(String num) {
+
         double number = Double.parseDouble(num);
         double compare = 10000000;
         String st_result;
-        if (number > compare ) {
+        if (number > compare) {
             DecimalFormat formatter = new DecimalFormat("0.######E0");
             st_result = formatter.format(number);
         } else if (number < 1) {
             DecimalFormat formatter = new DecimalFormat("0.######E0");
             st_result = formatter.format(number);
-        }
-        else {
+        } else {
             DecimalFormat simpler = new DecimalFormat("#.#####");
             st_result = simpler.format(number);
         }
 
         return st_result;
+    }
+
+    // method to update the exchange rate from this activity
+    private void refresh (final MenuItem refresh) {
+
+        final ArrayList<String> currency_name = new ArrayList<>();
+        currency_name.add(theCurrency.getCode());
+
+        final String url_to_api = new Utils(this).get_exchange_url(theCoin.getName(), currency_name);
+
+        StringRequest stringRequest_refresh = new StringRequest(Request.Method.GET, url_to_api,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+
+                        Log.e("response verify", response);
+
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault());
+                        Date date = new Date();
+                        String updated_at = sdf.format(date);
+                        String exchange_rate = "";
+                        try {
+                            JSONObject jsonResponse = new JSONObject(response);
+                            for (int i = 0; i < currency_name.size(); i++) {
+                                exchange_rate = jsonResponse.getString(currency_name.get(i));
+
+                                // update the database with the new exchange rates
+                                database.updateExchanges(exchange_rate, updated_at, theCurrency.getId(), theCoin.getName());
+                            }
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        double currExchange = Double.parseDouble(exchange_rate);
+
+                        if (flipped) {
+                            // reverse the exchange rate
+                            currExchange = (double) 1 / currExchange;
+                        }
+
+                        // update the exchange rate object with current values
+                        currentExchange.setExchangeRate(String.valueOf(currExchange));
+                        currentExchange.setTimestampUpdated(updated_at);
+
+                        // redisplay the views
+                        setup(flipped);
+
+                        // hide the loading progress bar
+                        hideProgressBar();
+
+                        // show the refresh icon
+                        refresh.setVisible(true);
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError volleyError) {
+                        String message = null;
+                        String error = "";
+                        if (volleyError instanceof NoConnectionError) {
+                            message = "Cannot connect to the Internet. Please check your connection!";
+                            error = "No internet connection";
+                        } else if (volleyError instanceof NetworkError) {
+                            message = "Cannot connect to the server. Please check your connection!";
+                            error = "No internet connection";
+                        } else if (volleyError instanceof ServerError) {
+                            message = "The server could not be found. Please try again after some time!";
+                        } else if (volleyError instanceof AuthFailureError) {
+                            message = "Cannot connect to Internet. Please check your connection!";
+                        } else if (volleyError instanceof ParseError) {
+                            message = "Parsing error! Please try again after some time!!";
+                        } else if (volleyError instanceof TimeoutError) {
+                            message = "Connection Timeout! Please check your internet connection.";
+                            error = "Poor internet connection";
+                        }
+                        Log.e("volley error", message);
+
+                        Toast.makeText(ExchangeActivity.this, error, Toast.LENGTH_LONG).show();
+
+                        // hide the loading progress bar
+                        hideProgressBar();
+
+                        // show the refresh icon
+                        refresh.setVisible(true);
+
+                    }
+                });
+        // Set the tag on the request.
+        stringRequest_refresh.setTag(TAG);
+        //Adding JsonArrayRequest to Request Queue
+        queue.add(stringRequest_refresh);
     }
 
     @Override
@@ -168,6 +296,8 @@ public class ExchangeActivity extends AppCompatActivity {
             return true;
         } else if (id == R.id.menu_refresh) {
             showProgressBar(item);
+            refresh(item);
+
             return true;
         }
 
